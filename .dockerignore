@@ -1,0 +1,9 @@
+# Konteks build = root repo (lihat deploy/docker-compose.yml).
+.git
+app/
+docs/
+# Kredensial dev — JANGAN ikut ke image. Di container dipakai env var.
+backend/config/env.local.php
+# Konten upload lokal tidak perlu dibake; runtime pakai named volume.
+backend/storage/uploads/produk/*
+backend/storage/uploads/profil/*

@@ -29,6 +29,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+    # Dipakai ulang bila sudah ada hasil `podman build -t localhost/koperasi-web ..`
+    image: localhost/koperasi-web:latest
     container_name: koperasi_web
     restart: unless-stopped
     depends_on:
