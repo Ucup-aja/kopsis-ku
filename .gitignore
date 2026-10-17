@@ -1,0 +1,35 @@
+# ── Artefak build (JANGAN di-commit, bisa >1.8 GB) ──────────────
+app/build/
+app/.dart_tool/
+app/linux/
+app/windows/
+app/macos/
+app/web/
+app/ios/Flutter/
+app/android/.gradle/
+app/android/app/.cxx/
+*.apk
+*.aab
+*.ipa
+
+# ── Rahasia / kredensial produksi ────────────────────────────────
+backend/config/env.local.php
+.env
+*.env.local
+
+# ── Upload foto pengguna (data, bukan kode) ──────────────────────
+backend/storage/uploads/produk/*
+backend/storage/uploads/profil/*
+!backend/storage/uploads/produk/.gitkeep
+!backend/storage/uploads/profil/.gitkeep
+
+# ── Log & OS ─────────────────────────────────────────────────────
+*.log
+*.sql.gz
+.DS_Store
+Thumbs.db
+
+# ── Editor ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp

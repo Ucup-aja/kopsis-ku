@@ -1,0 +1,42 @@
+CREATE DATABASE IF NOT EXISTS koperasi_siswa CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE koperasi_siswa;
+
+-- Koperasi Konsumen: hanya pengguna, produk, dan transaksi jual/restok.
+CREATE TABLE IF NOT EXISTS pengguna (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  username VARCHAR(50) DEFAULT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  foto VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS produk (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nama VARCHAR(150) NOT NULL,
+  kategori VARCHAR(50) NOT NULL DEFAULT 'lainnya',
+  harga DECIMAL(12,2) NOT NULL,
+  stok INT NOT NULL DEFAULT 0,
+  deskripsi TEXT,
+  foto VARCHAR(255) DEFAULT NULL,
+  status ENUM('tersedia','habis','arsip') DEFAULT 'tersedia',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS transaksi (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  kode VARCHAR(20) NOT NULL UNIQUE,
+  produk_id INT NULL,
+  nama_produk VARCHAR(150) NOT NULL,
+  tipe ENUM('penjualan','restok') NOT NULL DEFAULT 'penjualan',
+  jumlah INT NOT NULL,
+  harga_satuan DECIMAL(12,2) NOT NULL DEFAULT 0,
+  total DECIMAL(12,2) NOT NULL DEFAULT 0,
+  stok_sebelum INT NOT NULL,
+  stok_sesudah INT NOT NULL,
+  keterangan VARCHAR(255) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (produk_id) REFERENCES produk(id) ON DELETE SET NULL
+);

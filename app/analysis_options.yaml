@@ -1,0 +1,20 @@
+include: package:flutter_lints/flutter.yaml
+analyzer:
+  exclude:
+    - "lib/generated_plugin_registrant.dart"
+    - "lib/**.g.dart"
+    - "lib/**.freezed.dart"
+    - "test/**.mocks.dart"
+  errors:
+    missing_required_param: error
+    missing_return: error
+    todo: ignore
+  language:
+    strict-casts: false
+    strict-inference: false
+    strict-raw-types: false
+linter:
+  rules:
+    - avoid_print
+    - cancel_subscriptions
+    - close_sinks
