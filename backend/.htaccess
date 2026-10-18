@@ -1,0 +1,4 @@
+<FilesMatch "\.(sql|log|md|local\.php)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes

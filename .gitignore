@@ -36,3 +36,6 @@ Thumbs.db
 
 # ── Catatan handoff sesi (lokal saja) ────────────────────────────
 HANDOFF.md
+
+# Artefak upload hosting
+*.zip
