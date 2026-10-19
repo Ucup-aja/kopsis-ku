@@ -12,16 +12,9 @@ app/android/app/.cxx/
 *.aab
 *.ipa
 
-# ── Rahasia / kredensial produksi ────────────────────────────────
-backend/config/env.local.php
+# ── Rahasia / kredensial ─────────────────────────────────────────
 .env
 *.env.local
-
-# ── Upload foto pengguna (data, bukan kode) ──────────────────────
-backend/storage/uploads/produk/*
-backend/storage/uploads/profil/*
-!backend/storage/uploads/produk/.gitkeep
-!backend/storage/uploads/profil/.gitkeep
 
 # ── Log & OS ─────────────────────────────────────────────────────
 *.log

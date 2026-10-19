@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-/// Single-source formatting helpers (DESIGN.md §7).
+/// Single-source formatting helpers.
 ///
 /// Previously `rupiah()` was copy-pasted in dashboard/produk/transaksi screens.
 /// Use these everywhere instead.

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Auth session — persists logged-in user so restart doesn't force re-login.
 ///
 /// Stores only non-sensitive identity (id, name, username, email, fotoUrl).
-/// Passwords/tokens must never be stored here (SECURITY.md §2).
+/// Passwords/tokens must never be stored here.
 class AuthUser {
   final int id;
   final String name;
