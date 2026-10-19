@@ -317,11 +317,11 @@ class _ProdukScreenState extends State<ProdukScreen> {
               ])
             : hasExisting
                 ? Stack(children: [
-                    Image.network(fotoUrl,
+                    buildFoto(fotoUrl,
                         width: double.infinity,
                         height: 150,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _placeholder()),
+                        onError: _placeholder),
                     Positioned(
                         top: 8,
                         right: 8,

@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:koperasi_siswa/src/app/app.dart';
 import 'package:koperasi_siswa/src/core/error/app_exception.dart';
 import 'package:koperasi_siswa/src/core/error/result.dart';
+import 'package:koperasi_siswa/src/data/local/app_database.dart';
 import 'package:koperasi_siswa/src/data/repositories/produk_repository.dart';
-import 'package:koperasi_siswa/src/core/network/api_client.dart';
 
 void main() {
   testWidgets('App loads ke login koperasi konsumen', (tester) async {
@@ -13,8 +13,7 @@ void main() {
   });
 
   group('ProdukRepository.validateForm', () {
-    ProdukRepository make() =>
-        ProdukRepository(ApiClient(baseUrl: 'http://localhost'));
+    ProdukRepository make() => ProdukRepository(AppDatabase());
     test('rejects empty name', () {
       final r = make().validateForm(nama: '', harga: 1000, stok: 1);
       expect(r, isA<Err<void>>());

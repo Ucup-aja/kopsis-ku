@@ -1,5 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+
+/// Gambar dari path file lokal ATAU URL http. Mode offline menyimpan foto
+/// sebagai path absolut di penyimpanan aplikasi, bukan URL server.
+Widget buildFoto(String src,
+    {double? width,
+    double? height,
+    BoxFit fit = BoxFit.cover,
+    required Widget Function() onError}) {
+  if (src.startsWith('http')) {
+    return Image.network(src, width: width, height: height, fit: fit,
+        errorBuilder: (_, __, ___) => onError());
+  }
+  return Image.file(File(src), width: width, height: height, fit: fit,
+      errorBuilder: (_, __, ___) => onError());
+}
 
 /// Field pencarian konsisten di semua layar.
 class SearchField extends StatelessWidget {
@@ -84,12 +101,11 @@ class AvatarView extends StatelessWidget {
     final url = fotoUrl ?? '';
     if (url.isNotEmpty) {
       return ClipOval(
-        child: Image.network(
+        child: buildFoto(
           url,
           width: radius * 2,
           height: radius * 2,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallback(),
+          onError: _fallback,
         ),
       );
     }
@@ -124,13 +140,11 @@ class ProductImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final has = url.isNotEmpty && url.startsWith('http');
-    if (!has) return _placeholder(dark);
-    return Image.network(url,
+    if (url.isEmpty) return _placeholder(dark);
+    return buildFoto(url,
         width: width,
         height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(dark));
+        onError: () => _placeholder(dark));
   }
 
   Widget _placeholder(bool dark) => Container(

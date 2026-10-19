@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
-import '../core/network/api_client.dart';
-import '../core/config/env.dart';
 import '../core/session/auth_session.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/theme_controller.dart';
+import '../data/local/app_database.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/produk_repository.dart';
 import '../data/repositories/repositories.dart';
 import '../features/auth/login_page.dart';
 import '../features/shell/main_shell.dart';
 
-/// Composition root: ApiClient + repository koperasi konsumen.
+/// Composition root: database lokal SQLite + repository koperasi konsumen.
 class AppScope extends InheritedWidget {
-  final ApiClient api;
+  final AppDatabase db;
   late final AuthRepository auth;
   late final DashboardRepository dashboard;
   late final ProdukRepository produk;
   late final TransaksiRepository transaksi;
   late final ProfilRepository profil;
 
-  AppScope({super.key, required super.child, ApiClient? apiClient})
-      : api = apiClient ?? ApiClient(baseUrl: Env.apiBaseUrl) {
-    auth = AuthRepository(api);
-    dashboard = DashboardRepository(api);
-    produk = ProdukRepository(api);
-    transaksi = TransaksiRepository(api);
-    profil = ProfilRepository(api);
+  AppScope({super.key, required super.child, AppDatabase? database})
+      : db = database ?? AppDatabase.instance {
+    auth = AuthRepository(db);
+    dashboard = DashboardRepository(db);
+    produk = ProdukRepository(db);
+    transaksi = TransaksiRepository(db);
+    profil = ProfilRepository(db);
   }
 
   static AppScope of(BuildContext context) =>
@@ -35,7 +34,7 @@ class AppScope extends InheritedWidget {
       context.dependOnInheritedWidgetOfExactType<AppScope>();
 
   @override
-  bool updateShouldNotify(AppScope oldWidget) => api != oldWidget.api;
+  bool updateShouldNotify(AppScope oldWidget) => db != oldWidget.db;
 }
 
 class AppRouter {

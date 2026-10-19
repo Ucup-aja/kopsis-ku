@@ -1,28 +1,46 @@
 import 'dart:io';
-import '../../core/error/result.dart';
+
+import 'package:sqflite/sqflite.dart';
+
 import '../../core/error/app_exception.dart';
-import '../../core/network/api_client.dart';
+import '../../core/error/result.dart';
+import '../local/app_database.dart';
 import '../models/models.dart';
 
-/// Product repository — business-adjacent logic lives here, not in widgets.
+/// Product repository — logika bisnis produk ada di sini, bukan di widget.
+/// Implementasi SQLite lokal (pengganti `/backend/api/produk.php`).
 class ProdukRepository {
-  final ApiClient client;
-  ProdukRepository(this.client);
+  final AppDatabase db;
+  ProdukRepository(this.db);
+
+  static const _statusSah = ['tersedia', 'habis', 'arsip'];
 
   Future<Result<List<Produk>>> list(
       {String search = '', String kategori = '', String status = ''}) async {
     try {
-      final q = <String, String>{};
-      if (search.isNotEmpty) q['search'] = search;
-      if (kategori.isNotEmpty) q['kategori'] = kategori;
-      if (status.isNotEmpty) q['status'] = status;
-      final d = await client.getJson('/backend/api/produk.php', query: q);
-      final items = (d['data'] as List)
-          .map((e) => Produk.fromJson(Map<String, dynamic>.from(e as Map)))
-          .toList();
-      return Ok(items);
-    } on AppException catch (e) {
-      return Err(e);
+      final where = <String>[];
+      final args = <Object?>[];
+      if (search.isNotEmpty) {
+        where.add('(nama LIKE ? OR deskripsi LIKE ? OR kategori LIKE ?)');
+        final like = '%$search%';
+        args..add(like)..add(like)..add(like);
+      }
+      if (kategori.isNotEmpty) {
+        where.add('kategori = ?');
+        args.add(kategori);
+      }
+      if (_statusSah.contains(status)) {
+        where.add('status = ?');
+        args.add(status);
+      }
+      final d = await db.database;
+      final rows = await d.query('produk',
+          where: where.isEmpty ? null : where.join(' AND '),
+          whereArgs: args,
+          orderBy: 'updated_at DESC, id DESC');
+      return Ok(rows.map(_row).toList());
+    } catch (e) {
+      return Err(AppException('Gagal memuat produk.', code: 'DB_ERROR'));
     }
   }
 
@@ -55,20 +73,19 @@ class ProdukRepository {
     final v = validateForm(nama: nama, harga: harga, stok: stok);
     if (v is Err<void>) return Err((v as Err).error);
     try {
-      final d = await client.postMultipart('/backend/api/produk.php',
-          fields: {
-            'nama': nama,
-            'kategori': kategori,
-            'harga': harga.toString(),
-            'stok': stok.toString(),
-            'deskripsi': deskripsi,
-            'status': status,
-          },
-          fileField: foto != null ? 'foto' : null,
-          file: foto);
-      return Ok(Produk.fromJson(Map<String, dynamic>.from(d['data'] as Map)));
-    } on AppException catch (e) {
-      return Err(e);
+      final d = await db.database;
+      final id = await d.insert('produk', {
+        'nama': nama.trim(),
+        'kategori': kategori,
+        'harga': harga,
+        'stok': stok,
+        'deskripsi': deskripsi,
+        'foto': foto != null ? await db.simpanFoto(foto, 'prod') : null,
+        'status': _statusSah.contains(status) ? status : 'tersedia',
+      });
+      return Ok(await _get(d, id));
+    } catch (e) {
+      return Err(AppException('Gagal menyimpan produk.', code: 'DB_ERROR'));
     }
   }
 
@@ -84,35 +101,58 @@ class ProdukRepository {
     final v = validateForm(nama: nama, harga: harga, stok: stok);
     if (v is Err<void>) return Err((v as Err).error);
     try {
-      final fields = {
-        '_method': 'PUT',
-        'nama': nama,
-        'kategori': kategori,
-        'harga': harga.toString(),
-        'stok': stok.toString(),
-        'deskripsi': deskripsi,
-        'status': status,
-      };
-      if (hapusFoto) fields['foto_hapus'] = '1';
-      final d = await client.postMultipart('/backend/api/produk.php',
-          query: {'id': id.toString()},
-          fields: fields,
-          fileField: foto != null ? 'foto' : null,
-          file: foto);
-      return Ok(Produk.fromJson(Map<String, dynamic>.from(d['data'] as Map)));
-    } on AppException catch (e) {
-      return Err(e);
+      final d = await db.database;
+      final lama = await d.query('produk', where: 'id = ?', whereArgs: [id], limit: 1);
+      if (lama.isEmpty) {
+        return const Err(AppException('Produk tidak ditemukan.', code: 'NOT_FOUND'));
+      }
+      String? fotoBaru = lama.first['foto'] as String?;
+      if (foto != null) {
+        await db.hapusFotoFile(fotoBaru);
+        fotoBaru = await db.simpanFoto(foto, 'prod');
+      } else if (hapusFoto) {
+        await db.hapusFotoFile(fotoBaru);
+        fotoBaru = null;
+      }
+      await d.update(
+        'produk',
+        {
+          'nama': nama.trim(),
+          'kategori': kategori,
+          'harga': harga,
+          'stok': stok,
+          'deskripsi': deskripsi,
+          'foto': fotoBaru,
+          'status': _statusSah.contains(status) ? status : 'tersedia',
+          'updated_at': DateTime.now().toIso8601String().substring(0, 19).replaceFirst('T', ' '),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return Ok(await _get(d, id));
+    } catch (e) {
+      return Err(AppException('Gagal memperbarui produk.', code: 'DB_ERROR'));
     }
   }
 
   Future<Result<void>> delete(int id) async {
     try {
-      // Prefer explicit DELETE-override endpoint (legacy compat).
-      await client.postJson('/backend/api/produk.php?id=$id&_method=DELETE',
-          {'_method': 'DELETE', 'id': id});
+      final d = await db.database;
+      final lama = await d.query('produk', where: 'id = ?', whereArgs: [id], limit: 1);
+      if (lama.isEmpty) return const Ok(null);
+      await d.delete('produk', where: 'id = ?', whereArgs: [id]);
+      await db.hapusFotoFile(lama.first['foto'] as String?);
       return const Ok(null);
-    } on AppException catch (e) {
-      return Err(e);
+    } catch (e) {
+      return Err(AppException('Gagal menghapus produk.', code: 'DB_ERROR'));
     }
   }
+
+  Future<Produk> _get(Database d, int id) async {
+    final r = await d.query('produk', where: 'id = ?', whereArgs: [id], limit: 1);
+    return _row(r.first);
+  }
+
+  static Produk _row(Map<String, Object?> r) =>
+      Produk.fromJson(Map<String, dynamic>.from(r));
 }

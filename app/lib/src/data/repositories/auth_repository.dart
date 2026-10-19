@@ -1,54 +1,89 @@
-import '../../core/error/result.dart';
-import '../../core/error/app_exception.dart';
-import '../../core/network/api_client.dart';
-import '../../core/session/auth_session.dart';
+import 'dart:convert';
+import 'dart:math';
 
-/// Auth repository — isolates auth data access (ARCHITECTURE.md §4).
-/// UI must use this, never [ApiClient]/`http` directly.
+import 'package:crypto/crypto.dart';
+
+import '../../core/error/app_exception.dart';
+import '../../core/error/result.dart';
+import '../../core/session/auth_session.dart';
+import '../local/app_database.dart';
+
+/// Auth lokal (SQLite) — pengganti `/backend/auth` tanpa server.
+/// UI memakai ini, tidak boleh menyentuh database langsung.
 class AuthRepository {
-  final ApiClient client;
-  AuthRepository(this.client);
+  final AppDatabase db;
+  AuthRepository(this.db);
+
+  static final Random _rng = Random.secure();
+
+  static String _hash(String salt, String password) =>
+      sha256.convert(utf8.encode('$salt$password')).toString();
 
   Future<Result<AuthUser>> login(String username, String password) async {
     if (username.trim().isEmpty || password.isEmpty) {
       return const Err(
           AppException('Username dan password wajib diisi.', code: 'VALIDATION_ERROR'));
     }
-    try {
-      final d = await client.postJson(
-          '/backend/auth/login.php', {'username': username.trim(), 'password': password});
-      final u = (d['user'] ?? d['data']?['user'] ?? d['data'] ?? {}) as Map;
-      final user = AuthUser(
-        id: int.tryParse(u['id']?.toString() ?? '') ?? 0,
-        name: u['name']?.toString() ?? u['username']?.toString() ?? '',
-        username: u['username']?.toString() ?? username.trim(),
-        email: u['email']?.toString() ?? '',
-        foto: u['foto']?.toString(),
-        fotoUrl: u['foto_url']?.toString(),
-      );
-      if (user.id <= 0) {
-        return const Err(AppException('Respons login tidak valid.', code: 'INVALID_RESPONSE'));
-      }
-      await AuthSession.instance.save(user);
-      return Ok(user);
-    } on AppException catch (e) {
-      return Err(e);
+    final d = await db.database;
+    final rows = await d.query('pengguna',
+        where: 'username = ?', whereArgs: [username.trim()], limit: 1);
+    if (rows.isEmpty ||
+        rows.first['password'] !=
+            _hash(rows.first['salt'] as String, password)) {
+      return const Err(
+          AppException('Username atau password salah', code: 'INVALID_CREDENTIALS'));
     }
+    final r = rows.first;
+    final user = AuthUser(
+      id: r['id'] as int,
+      name: (r['name'] ?? '') as String,
+      username: (r['username'] ?? '') as String,
+      email: (r['email'] ?? '') as String,
+      foto: r['foto'] as String?,
+      fotoUrl: r['foto'] as String?,
+    );
+    await AuthSession.instance.save(user);
+    return Ok(user);
   }
 
   Future<Result<Map<String, dynamic>>> register(
       String name, String username, String email, String password) async {
-    try {
-      final d = await client.postJson('/backend/auth/registrasi.php', {
-        'name': name.trim(),
-        'username': username.trim(),
-        'email': email.trim(),
-        'password': password,
-      });
-      return Ok(d);
-    } on AppException catch (e) {
-      return Err(e);
+    name = name.trim();
+    username = username.trim();
+    email = email.trim();
+    // Bentuk respons identik dengan backend: {success, message}.
+    Map<String, dynamic> res(bool ok, String msg) =>
+        {'success': ok, 'message': msg};
+
+    if (name.isEmpty || username.isEmpty || email.isEmpty || password.isEmpty) {
+      return Ok(res(false, 'Nama, username, email, password wajib diisi'));
     }
+    if (!RegExp(r'^[a-zA-Z0-9._]{3,30}$').hasMatch(username)) {
+      return Ok(res(false, 'Username 3-30 karakter, huruf/angka/._ saja'));
+    }
+    if (!RegExp(r'^[\w.+-]+@[\w-]+\.[\w.-]+$').hasMatch(email)) {
+      return Ok(res(false, 'Format email tidak valid'));
+    }
+    if (password.length < 6) {
+      return Ok(res(false, 'Password minimal 6 karakter'));
+    }
+    final d = await db.database;
+    final bentrok = await d.query('pengguna',
+        where: 'username = ? OR email = ?', whereArgs: [username, email], limit: 1);
+    if (bentrok.isNotEmpty) {
+      return Ok(res(false, 'Username atau email sudah terdaftar'));
+    }
+    final salt = List.generate(
+            16, (_) => _rng.nextInt(256).toRadixString(16).padLeft(2, '0'))
+        .join();
+    await d.insert('pengguna', {
+      'name': name,
+      'username': username,
+      'email': email,
+      'password': _hash(salt, password),
+      'salt': salt,
+    });
+    return Ok(res(true, 'Registrasi berhasil, silakan login dengan username'));
   }
 
   Future<void> logout() => AuthSession.instance.clear();
