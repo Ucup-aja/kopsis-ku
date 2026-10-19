@@ -6,10 +6,13 @@ import 'package:sqflite/sqflite.dart';
 
 /// Database lokal SQLite — seluruh data tinggal di HP, tanpa server.
 class AppDatabase {
-  AppDatabase({String? path}) : _path = path;
+  AppDatabase({String? path, String? fotoDirPath})
+      : _path = path,
+        _fotoDirPath = fotoDirPath;
   static final AppDatabase instance = AppDatabase();
 
   final String? _path;
+  final String? _fotoDirPath;
   Database? _db;
   Directory? _fotoDir;
 
@@ -71,7 +74,7 @@ class AppDatabase {
         : p.extension(sumber.path).toLowerCase();
     final nama =
         '${prefix}_${DateTime.now().millisecondsSinceEpoch}$ekstensi';
-    final dest = '$dir/$nama';
+    final dest = p.join(dir.path, nama); // WAJIB pakai dir.path — '$dir' → "Directory: '...'"
     await sumber.copy(dest);
     return dest;
   }
@@ -84,8 +87,8 @@ class AppDatabase {
 
   Future<Directory> fotoDir() async {
     if (_fotoDir != null) return _fotoDir!;
-    final base = await getApplicationDocumentsDirectory();
-    final dir = Directory(p.join(base.path, 'foto'));
+    final dir = Directory(_fotoDirPath ??
+        p.join((await getApplicationDocumentsDirectory()).path, 'foto'));
     if (!await dir.exists()) await dir.create(recursive: true);
     _fotoDir = dir;
     return dir;
