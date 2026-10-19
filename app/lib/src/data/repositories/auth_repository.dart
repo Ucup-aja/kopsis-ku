@@ -8,7 +8,7 @@ import '../../core/error/result.dart';
 import '../../core/session/auth_session.dart';
 import '../local/app_database.dart';
 
-/// Auth lokal (SQLite) — pengganti `/backend/auth` tanpa server.
+/// Auth lokal (SQLite) — login/register di penyimpanan HP.
 /// UI memakai ini, tidak boleh menyentuh database langsung.
 class AuthRepository {
   final AppDatabase db;
@@ -51,7 +51,7 @@ class AuthRepository {
     name = name.trim();
     username = username.trim();
     email = email.trim();
-    // Bentuk respons identik dengan backend: {success, message}.
+    // Bentuk respons {success, message} — dipakai layar register.
     Map<String, dynamic> res(bool ok, String msg) =>
         {'success': ok, 'message': msg};
 

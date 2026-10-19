@@ -102,7 +102,7 @@ void main() {
       t.view.devicePixelRatio = 1;
       await t.pumpWidget(const KopsisApp());
       await t.pump(Duration(milliseconds: 300));
-      expect(find.text('Masuk Pengelola'), findsOneWidget);
+      expect(find.text('MASUK'), findsOneWidget);
       addTearDown(() {
         t.view.resetPhysicalSize();
         t.view.resetDevicePixelRatio();

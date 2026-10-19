@@ -3,17 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
-/// Gambar dari path file lokal ATAU URL http. Mode offline menyimpan foto
-/// sebagai path absolut di penyimpanan aplikasi, bukan URL server.
+/// Gambar dari path file di penyimpanan app — foto disimpan lokal, bukan URL.
 Widget buildFoto(String src,
     {double? width,
     double? height,
     BoxFit fit = BoxFit.cover,
     required Widget Function() onError}) {
-  if (src.startsWith('http')) {
-    return Image.network(src, width: width, height: height, fit: fit,
-        errorBuilder: (_, __, ___) => onError());
-  }
   return Image.file(File(src), width: width, height: height, fit: fit,
       errorBuilder: (_, __, ___) => onError());
 }

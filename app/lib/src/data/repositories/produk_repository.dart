@@ -8,7 +8,6 @@ import '../local/app_database.dart';
 import '../models/models.dart';
 
 /// Product repository — logika bisnis produk ada di sini, bukan di widget.
-/// Implementasi SQLite lokal (pengganti `/backend/api/produk.php`).
 class ProdukRepository {
   final AppDatabase db;
   ProdukRepository(this.db);

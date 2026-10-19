@@ -6,7 +6,7 @@ import '../../core/error/result.dart';
 import '../local/app_database.dart';
 import '../models/models.dart';
 
-/// Dashboard lokal — agregasi dihitung dari SQLite, pengganti `/backend/api/dashboard.php`.
+/// Dashboard lokal — agregasi dihitung langsung dari SQLite.
 class DashboardRepository {
   final AppDatabase db;
   DashboardRepository(this.db);
@@ -82,7 +82,7 @@ class DashboardRepository {
       Produk.fromJson(Map<String, dynamic>.from(r));
 }
 
-/// Transaksi lokal — aturan stok identik dengan `/backend/api/transaksi.php`.
+/// Transaksi lokal — aturan stok (tolak kurang, pulih saat hapus, status ikut bereaksi).
 class TransaksiRepository {
   final AppDatabase db;
   TransaksiRepository(this.db);
@@ -208,7 +208,7 @@ class TransaksiRepository {
 
       int id = 0;
       await d.transaction((txn) async {
-        // Samakan perilaku MySQL: stok berubah → updated_at ikut terbarui.
+        // Stok berubah → updated_at ikut terbarui (dashboard urut dari ini).
         await txn.rawUpdate(
             "UPDATE produk SET stok=?, status=CASE WHEN ?<=0 THEN 'habis' "
             "WHEN status='habis' AND ?>0 THEN 'tersedia' ELSE status END, "
@@ -248,7 +248,7 @@ class TransaksiRepository {
       await d.transaction((txn) async {
         final produkId = trx.first['produk_id'];
         if (produkId != null) {
-          // Kembalikan stok ke kondisi sebelum transaksi (sama seperti backend).
+          // Kembalikan stok ke kondisi sebelum transaksi.
           final sebelum = ((trx.first['stok_sebelum'] as num).toInt()).clamp(0, 1 << 30);
           await txn.rawUpdate(
               "UPDATE produk SET stok=?, status=CASE WHEN ?<=0 THEN 'habis' ELSE 'tersedia' END, "
@@ -264,7 +264,7 @@ class TransaksiRepository {
   }
 }
 
-/// Profil lokal — pengganti `/backend/api/profil.php` (foto disimpan di penyimpanan app).
+/// Profil lokal — foto profil disimpan di penyimpanan app (path kolom `foto`).
 class ProfilRepository {
   final AppDatabase db;
   ProfilRepository(this.db);

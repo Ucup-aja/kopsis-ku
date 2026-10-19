@@ -9,7 +9,7 @@ void main() {
   testWidgets('App loads ke login koperasi konsumen', (tester) async {
     await tester.pumpWidget(const KopsisApp());
     await tester.pump(Duration(milliseconds: 300));
-    expect(find.text('Masuk Pengelola'), findsOneWidget);
+    expect(find.text('MASUK'), findsOneWidget);
   });
 
   group('ProdukRepository.validateForm', () {
