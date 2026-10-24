@@ -25,15 +25,49 @@ php backend/check.php http://localhost:8080/koperasi_siswa   # harus SEMUA LULUS
 
 Tunnel (pilih salah satu):
 
+### Tunnel cepat (uji, tanpa domain)
+
 ```bash
-# tunnel cepat (uji) — URL acak *.trycloudflare.com, lihat di log
 docker run -d --rm --network koperasi_siswa_default \
   cloudflare/cloudflared:latest tunnel --url http://backend:80
 docker logs -f $(docker ps -qf ancestor=cloudflare/cloudflared)
-
-# tunnel bernama (permanen) — isi TUNNEL_TOKEN di .env
-docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
 ```
+
+URL acak `*.trycloudflare.com`, berubah tiap restart — hanya untuk uji.
+
+### Tunnel bernama (permanen, butuh domain di Cloudflare)
+
+1. Dashboard Cloudflare → **Zero Trust** → **Networks** → **Tunnels** →
+   *Create a tunnel* → pilih **Cloudflared** → nama `koperasi` → *Next*.
+2. Halaman install: pilih **Docker** → salin **token** (JWT panjang).
+3. Isi `.env`:
+
+   ```bash
+   TUNNEL_TOKEN=eyJhI...(token tadi)
+   ```
+
+4. **Tambah Public Hostname** (route):
+   - Subdomain: `koperasi`   •   Domain: `domainmu.com`
+   - Service: `HTTP` → `http://backend:80`
+   - *Save hostname*
+
+   > `backend:80` = nama service + port **di dalam jaringan compose**.
+   > Kalau cloudflared jalan di host (bukan container), pakai `http://localhost:8080`.
+
+5. Jalankan:
+
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
+   docker compose logs -f tunnel
+   ```
+
+6. Uji:
+
+   ```bash
+   curl https://koperasi.domainmu.com/koperasi_siswa/backend/api/dashboard.php
+   ```
+
+Token bisa dirotasi/di-revoke dari dashboard kapan saja.
 
 Build APK menunjuk URL tunnel:
 
