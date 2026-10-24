@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:koperasi_siswa/src/app/app.dart';
 import 'package:koperasi_siswa/src/core/error/app_exception.dart';
 import 'package:koperasi_siswa/src/core/error/result.dart';
-import 'package:koperasi_siswa/src/data/local/app_database.dart';
+import 'package:koperasi_siswa/src/core/network/api_client.dart';
 import 'package:koperasi_siswa/src/data/repositories/produk_repository.dart';
 
 void main() {
@@ -13,7 +13,8 @@ void main() {
   });
 
   group('ProdukRepository.validateForm', () {
-    ProdukRepository make() => ProdukRepository(AppDatabase());
+    ProdukRepository make() =>
+        ProdukRepository(ApiClient(baseUrl: 'http://localhost'));
     test('rejects empty name', () {
       final r = make().validateForm(nama: '', harga: 1000, stok: 1);
       expect(r, isA<Err<void>>());

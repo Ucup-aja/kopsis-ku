@@ -15,6 +15,11 @@ app/android/app/.cxx/
 # ── Rahasia / kredensial ─────────────────────────────────────────
 .env
 *.env.local
+backend/config/env.local.php
+
+# ── Foto upload (simpan .gitkeep-nya) ────────────────────────────
+backend/storage/uploads/*/*
+!backend/storage/uploads/*/.gitkeep
 
 # ── Log & OS ─────────────────────────────────────────────────────
 *.log

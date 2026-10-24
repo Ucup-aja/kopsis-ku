@@ -1,17 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-
-/// Gambar dari path file di penyimpanan app — foto disimpan lokal, bukan URL.
-Widget buildFoto(String src,
-    {double? width,
-    double? height,
-    BoxFit fit = BoxFit.cover,
-    required Widget Function() onError}) {
-  return Image.file(File(src), width: width, height: height, fit: fit,
-      errorBuilder: (_, __, ___) => onError());
-}
 
 /// Field pencarian konsisten di semua layar.
 class SearchField extends StatelessWidget {
@@ -96,11 +84,12 @@ class AvatarView extends StatelessWidget {
     final url = fotoUrl ?? '';
     if (url.isNotEmpty) {
       return ClipOval(
-        child: buildFoto(
+        child: Image.network(
           url,
           width: radius * 2,
           height: radius * 2,
-          onError: _fallback,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
         ),
       );
     }
@@ -135,11 +124,13 @@ class ProductImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    if (url.isEmpty) return _placeholder(dark);
-    return buildFoto(url,
+    final has = url.isNotEmpty && url.startsWith('http');
+    if (!has) return _placeholder(dark);
+    return Image.network(url,
         width: width,
         height: height,
-        onError: () => _placeholder(dark));
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _placeholder(dark));
   }
 
   Widget _placeholder(bool dark) => Container(
