@@ -1,9 +1,14 @@
-# Konteks build = root repo (lihat deploy/docker-compose.yml).
+# Konteks build = root repo (lihat docker-compose.yml).
 .git
-app/
-docs/
-# Kredensial dev — JANGAN ikut ke image. Di container dipakai env var.
+app
+docs
+deploy
+*.md
+*.zip
+.env
+
+# Rahasia lokal jangan ikut masuk image (container pakai env var).
 backend/config/env.local.php
-# Konten upload lokal tidak perlu dibake; runtime pakai named volume.
+# Konten upload tidak perlu dibake; runtime pakai named volume.
 backend/storage/uploads/produk/*
 backend/storage/uploads/profil/*

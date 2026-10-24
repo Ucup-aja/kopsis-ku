@@ -10,13 +10,53 @@ semua device; data sinkron karena satu database yang sama.
 
 ---
 
-## 1. Siapkan
+## Cara A — Docker (rekomendasi)
+
+Persiapan VPS: Docker + Docker Compose (`sudo apt install docker.io docker-compose-v2`).
+
+```bash
+cd /var/www/html
+sudo git clone https://github.com/Ucup-aja/kopsis-ku.git koperasi_siswa
+cd koperasi_siswa
+cp .env.example .env          # lalu isi DB_PASS & DB_ROOT_PASS
+docker compose up -d --build
+php backend/check.php http://localhost:8080/koperasi_siswa   # harus SEMUA LULUS
+```
+
+Tunnel (pilih salah satu):
+
+```bash
+# tunnel cepat (uji) — URL acak *.trycloudflare.com, lihat di log
+docker run -d --rm --network koperasi_siswa_default \
+  cloudflare/cloudflared:latest tunnel --url http://backend:80
+docker logs -f $(docker ps -qf ancestor=cloudflare/cloudflared)
+
+# tunnel bernama (permanen) — isi TUNNEL_TOKEN di .env
+docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
+```
+
+Build APK menunjuk URL tunnel:
+
+```bash
+cd app
+flutter build apk --release \
+  --dart-define=API_BASE_URL=https://<host-tunnel>/koperasi_siswa
+```
+
+Keuntungan: DB, folder upload, dan versi PHP terkurung dalam image. Upgrade cukup
+`docker compose build --no-cache && docker compose up -d`.
+
+---
+
+## Cara B — manual (tanpa Docker)
+
+### 1. Siapkan
 
 - VPS dengan akses `root`/`sudo`
 - Domain (boleh subdomain) yang bisa diatur DNS-nya — untuk Cloudflare Tunnel
 - Repo publik: https://github.com/Ucup-aja/kopsis-ku
 
-## 2. Pasang stack dasar
+### 2. Pasang stack dasar
 
 Ubuntu/Debian:
 
@@ -33,7 +73,7 @@ sudo dnf install -y httpd php php-mysqli php-mbstring php-curl php-fileinfo mari
 sudo systemctl enable --now httpd mariadb
 ```
 
-## 3. Clone repo
+### 3. Clone repo
 
 ```bash
 cd /var/www/html
@@ -49,7 +89,7 @@ Kalau SELinux aktif (Fedora):
 sudo chcon -R -t httpd_sys_rw_content_t backend/storage/uploads
 ```
 
-## 4. Database
+### 4. Database
 
 ```bash
 sudo mysql < backend/database/schema.sql
@@ -60,7 +100,7 @@ sudo mysql -e "CREATE USER 'koperasi'@'localhost' IDENTIFIED BY 'PASSWORD_KUAT';
 
 Ganti `PASSWORD_KUAT` dengan password kuat.
 
-## 5. Kredensial aplikasi
+### 5. Kredensial aplikasi
 
 Buat `backend/config/env.local.php` (file ini **tidak** di-commit):
 
@@ -73,7 +113,7 @@ putenv('DB_NAME=koperasi_siswa');
 putenv('APP_PREFIX=/koperasi_siswa');   // sesuaikan lokasi clone
 ```
 
-## 6. Apache
+### 6. Apache
 
 - Pastikan `AllowOverride All` pada docroot (agar `backend/.htaccess` aktif —
   memblokir `.sql`/`.env`/`*.local.php`).
@@ -81,7 +121,7 @@ putenv('APP_PREFIX=/koperasi_siswa');   // sesuaikan lokasi clone
   - Fedora: di `/etc/httpd/conf/httpd.conf`, blok `<Directory "/var/www/html">`
 - `sudo systemctl reload apache2` (Ubuntu) / `sudo systemctl reload httpd` (Fedora)
 
-## 7. Uji lokal di server
+### 7. Uji lokal di server
 
 ```bash
 php backend/check.php http://localhost/koperasi_siswa
@@ -89,7 +129,7 @@ php backend/check.php http://localhost/koperasi_siswa
 
 Harus `SEMUA LULUS`. Kalau belum, selesaikan dulu sebelum lanjut ke tunnel.
 
-## 8. Cloudflare Tunnel
+### 8. Cloudflare Tunnel
 
 Pasang `cloudflared`:
 
@@ -132,7 +172,7 @@ sudo cloudflared service install
 sudo systemctl enable --now cloudflared
 ```
 
-## 9. Build APK menunjuk URL publik
+### 9. Build APK menunjuk URL publik
 
 ```bash
 cd app
@@ -140,7 +180,7 @@ flutter build apk --release \
   --dart-define=API_BASE_URL=https://koperasi.domainmu.com/koperasi_siswa
 ```
 
-## 10. Uji akhir
+### 10. Uji akhir
 
 ```bash
 php backend/check.php https://koperasi.domainmu.com/koperasi_siswa

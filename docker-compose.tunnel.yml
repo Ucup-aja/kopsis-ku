@@ -1,0 +1,17 @@
+# Override tunnel (Cloudflare) — image cloudflared distroless (tak ada shell),
+# jadi perintah dikirim sebagai argumen langsung.
+#
+# Pakai tunnel bernama (URL permanen): isi TUNNEL_TOKEN di .env, lalu:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d
+#
+# Pakai tunnel cepat (URL acak *.trycloudflare.com, untuk uji):
+#   docker run -d --rm --network koperasi_siswa_default \
+#     cloudflare/cloudflared:latest tunnel --url http://backend:80
+#   docker logs <nama-container>   # lihat URL-nya
+services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: ["tunnel", "run", "--token", "${TUNNEL_TOKEN:?isi TUNNEL_TOKEN di .env}"]
+    depends_on:
+      - backend

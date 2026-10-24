@@ -71,6 +71,17 @@ Pertama kali buka app: daftar lewat layar **Registrasi**.
 
 ## Deploy VPS
 
+**Cara Docker (rekomendasi)** — lihat `docs/DEPLOY_VPS.md`:
+
+```bash
+git clone https://github.com/Ucup-aja/kopsis-ku.git && cd koperasi_siswa
+cp .env.example .env          # isi DB_PASS & DB_ROOT_PASS
+docker compose up -d --build
+php backend/check.php http://localhost:8080/koperasi_siswa   # SEMUA LULUS
+```
+
+**Cara manual:**
+
 1. **Stack**: PHP 8 + MariaDB/MySQL + Apache/Nginx.
 2. **Upload** `backend/` ke VPS (mis. `/var/www/html/koperasi_siswa`).
 3. **Database**:

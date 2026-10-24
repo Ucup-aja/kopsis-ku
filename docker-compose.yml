@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: koperasi_siswa
+      MARIADB_USER: ${DB_USER:-koperasi}
+      MARIADB_PASSWORD: ${DB_PASS:?DB_PASS wajib diisi di .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS:?DB_ROOT_PASS wajib diisi di .env}
+    volumes:
+      - db_data:/var/lib/mysql
+      # Skema dibuat saat inisialisasi pertama (volume masih kosong).
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build: .
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER:-koperasi}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: koperasi_siswa
+      APP_PREFIX: ${APP_PREFIX:-/koperasi_siswa}
+      ALLOWED_ORIGIN: ${ALLOWED_ORIGIN:-*}
+    volumes:
+      # Foto produk/profil persisten antar restart.
+      - uploads:/var/www/html/koperasi_siswa/backend/storage/uploads
+    ports:
+      - "${BACKEND_PORT:-8080}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  uploads:
