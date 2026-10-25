@@ -3,6 +3,8 @@
 require_once __DIR__."/../config/cors.php";
 cors(["GET","POST","PUT","DELETE","OPTIONS"]);
 require_once __DIR__."/../config/db.php";
+require_once __DIR__."/../config/auth.php";
+require_auth($conn, $authUserId);
 $conn->set_charset("utf8mb4");
 mysqli_report(MYSQLI_REPORT_OFF);
 function respond($ok,$msg,$data=null,$code=200){http_response_code($code);echo json_encode(["success"=>$ok,"message"=>$msg,"data"=>$data], JSON_UNESCAPED_UNICODE);exit;}

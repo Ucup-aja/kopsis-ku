@@ -14,6 +14,10 @@ if ($name === "" || $username === "" || $email === "" || $password === "") { ech
 if (!preg_match('/^[a-zA-Z0-9._]{3,30}$/', $username)) { echo json_encode(["success"=>false,"message"=>"Username 3-30 karakter, huruf/angka/._ saja"]); exit; }
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { echo json_encode(["success"=>false,"message"=>"Format email tidak valid"]); exit; }
 if (strlen($password) < 6) { echo json_encode(["success"=>false,"message"=>"Password minimal 6 karakter"]); exit; }
+// Registrasi hanya untuk akun PERTAMA (saat tabel pengguna masih kosong).
+// Setelah ada akun, pembuatan akun baru dihentikan agar API tidak terbuka ke publik.
+$cek = $conn->query("SELECT COUNT(*) AS n FROM pengguna")->fetch_assoc();
+if ((int)($cek["n"] ?? 0) > 0) { echo json_encode(["success"=>false,"message"=>"Registrasi hanya untuk akun pertama. Hubungi pengelola koperasi."]); exit; }
 $stmt = $conn->prepare("SELECT id FROM pengguna WHERE username=? OR email=?");
 $stmt->bind_param("ss", $username, $email);
 $stmt->execute(); $r=$stmt->get_result();

@@ -13,6 +13,9 @@ class AuthUser {
   final String? foto;
   final String? fotoUrl;
 
+  /// Token sesi (Bearer) — dipakai untuk request API berikutnya.
+  final String? token;
+
   const AuthUser({
     required this.id,
     required this.name,
@@ -20,6 +23,7 @@ class AuthUser {
     required this.email,
     this.foto,
     this.fotoUrl,
+    this.token,
   });
 
   Map<String, String> toPrefs() => {
@@ -29,6 +33,7 @@ class AuthUser {
         'email': email,
         'foto': foto ?? '',
         'fotoUrl': fotoUrl ?? '',
+        'token': token ?? '',
       };
 
   static AuthUser? fromPrefs(Map<String, String?> m) {
@@ -41,6 +46,7 @@ class AuthUser {
       email: m['email'] ?? '',
       foto: (m['foto'] ?? '').isEmpty ? null : m['foto'],
       fotoUrl: (m['fotoUrl'] ?? '').isEmpty ? null : m['fotoUrl'],
+      token: (m['token'] ?? '').isEmpty ? null : m['token'],
     );
   }
 
@@ -68,6 +74,10 @@ class AuthSession extends ChangeNotifier {
   static const _pEmail = 'auth_email';
   static const _pFoto = 'auth_foto';
   static const _pFotoUrl = 'auth_foto_url';
+  static const _pToken = 'auth_token';
+
+  /// Token sesi aktif (null bila belum login).
+  String? get token => _user?.token;
 
   Future<void> load() async {
     final p = await SharedPreferences.getInstance();
@@ -78,6 +88,7 @@ class AuthSession extends ChangeNotifier {
       'email': p.getString(_pEmail),
       'foto': p.getString(_pFoto),
       'fotoUrl': p.getString(_pFotoUrl),
+      'token': p.getString(_pToken),
     });
     notifyListeners();
   }
@@ -91,6 +102,7 @@ class AuthSession extends ChangeNotifier {
     await p.setString(_pEmail, u.email);
     await p.setString(_pFoto, u.foto ?? '');
     await p.setString(_pFotoUrl, u.fotoUrl ?? '');
+    await p.setString(_pToken, u.token ?? '');
     notifyListeners();
   }
 
@@ -111,6 +123,7 @@ class AuthSession extends ChangeNotifier {
     await p.remove(_pEmail);
     await p.remove(_pFoto);
     await p.remove(_pFotoUrl);
+    await p.remove(_pToken);
     notifyListeners();
   }
 }

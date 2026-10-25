@@ -15,8 +15,10 @@ $stmt->execute(); $r=$stmt->get_result();
 if($r->num_rows===0){ echo json_encode(["success"=>false,"message"=>"Username atau password salah"]); exit; }
 $user=$r->fetch_assoc();
 if(!password_verify($password,$user["password"])){ echo json_encode(["success"=>false,"message"=>"Username atau password salah"]); exit; }
+require_once __DIR__."/../config/auth.php";
+$token = auth_issue($conn, (int)$user["id"]);
 require_once __DIR__."/../src/Support/url.php";
 $fotoUrl = foto_url($user['foto'], upload_base('profil'));
 echo json_encode(["success"=>true,"message"=>"Login berhasil","user"=>[
-  "id"=>(int)$user["id"],"name"=>$user["name"],"username"=>$user["username"],"email"=>$user["email"],"foto"=>$user["foto"],"foto_url"=>$fotoUrl
+  "id"=>(int)$user["id"],"name"=>$user["name"],"username"=>$user["username"],"email"=>$user["email"],"foto"=>$user["foto"],"foto_url"=>$fotoUrl,"token"=>$token
 ]]);

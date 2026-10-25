@@ -40,3 +40,13 @@ CREATE TABLE IF NOT EXISTS transaksi (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (produk_id) REFERENCES produk(id) ON DELETE SET NULL
 );
+
+-- Sesi login: token Bearer acak, kedaluwarsa 30 hari.
+CREATE TABLE IF NOT EXISTS sesi (
+  token VARCHAR(64) NOT NULL PRIMARY KEY,
+  pengguna_id INT NOT NULL,
+  dibuat_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expired_at TIMESTAMP NOT NULL,
+  INDEX idx_sesi_pengguna (pengguna_id),
+  FOREIGN KEY (pengguna_id) REFERENCES pengguna(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

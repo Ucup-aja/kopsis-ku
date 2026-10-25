@@ -11,4 +11,8 @@
 RewriteEngine On
 RewriteRule ^storage/uploads/.*\.php$ - [F,L]
 
+# Apache menyembunyikan header Authorization dari PHP secara default —
+# tanpa ini semua request ber-token ditolak 401.
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
 Options -Indexes

@@ -2,6 +2,8 @@
 require_once __DIR__."/../config/cors.php";
 cors();
 require_once __DIR__."/../config/db.php";
+require_once __DIR__."/../config/auth.php";
+require_auth($conn, $authUserId);
 $uploadDir = realpath(__DIR__."/../storage/uploads/profil") ?: (__DIR__."/../storage/uploads/profil");
 if(!is_dir($uploadDir)) mkdir($uploadDir,0777,true);
 require_once __DIR__."/../src/Support/url.php";

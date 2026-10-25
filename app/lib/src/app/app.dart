@@ -21,6 +21,9 @@ class AppScope extends InheritedWidget {
 
   AppScope({super.key, required super.child, ApiClient? apiClient})
       : api = apiClient ?? ApiClient(baseUrl: Env.apiBaseUrl) {
+    // Token sesi dibaca ulang tiap AppScope dibuat (mis. setelah login/logout).
+    final token = AuthSession.instance.token;
+    if (token != null) api.setAuthToken(token);
     auth = AuthRepository(api);
     dashboard = DashboardRepository(api);
     produk = ProdukRepository(api);

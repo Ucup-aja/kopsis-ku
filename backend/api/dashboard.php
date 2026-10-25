@@ -3,6 +3,8 @@
 require_once __DIR__."/../config/cors.php";
 cors();
 require_once __DIR__ . "/../config/db.php";
+require_once __DIR__."/../config/auth.php";
+require_auth($conn, $authUserId);
 mysqli_report(MYSQLI_REPORT_OFF);
 function tryQuery($conn, $sql) {
   try {

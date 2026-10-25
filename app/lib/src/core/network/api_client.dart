@@ -46,6 +46,15 @@ class ApiClient {
     return 'http://10.0.2.2:8081/koperasi_siswa';
   }
 
+  String? _token;
+
+  /// Setel token sesi (Bearer). Dipanggil setelah login dan saat app mulai.
+  void setAuthToken(String? token) => _token = token;
+
+  Map<String, String> _authHeaders() => {
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      };
+
   Uri uri(String path, [Map<String, String>? query]) {
     final base = path.startsWith('http') ? path : '$baseUrl$path';
     final u = Uri.parse(base);
@@ -95,7 +104,8 @@ class ApiClient {
   Future<Map<String, dynamic>> getJson(String path,
       {Map<String, String>? query}) async {
     try {
-      final r = await _http.get(uri(path, query)).timeout(timeout);
+      final r =
+          await _http.get(uri(path, query), headers: _authHeaders()).timeout(timeout);
       final d = _decode(r.body, r.statusCode);
       if (d['success'] != true || r.statusCode >= 400) {
         _throwForEnvelope(d, r.statusCode);
@@ -117,7 +127,7 @@ class ApiClient {
     try {
       final r = await _http
           .post(uri(path),
-              headers: {'Content-Type': 'application/json'},
+              headers: {..._authHeaders(), 'Content-Type': 'application/json'},
               body: jsonEncode(body))
           .timeout(timeout);
       final d = _decode(r.body, r.statusCode);
@@ -146,6 +156,7 @@ class ApiClient {
   }) async {
     try {
       final req = http.MultipartRequest('POST', uri(path, query));
+      req.headers.addAll(_authHeaders());
       req.fields.addAll(fields);
       if (fileField != null && file != null) {
         req.files.add(await http.MultipartFile.fromPath(fileField, file.path));

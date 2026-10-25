@@ -25,10 +25,12 @@ class AuthRepository {
         email: u['email']?.toString() ?? '',
         foto: u['foto']?.toString(),
         fotoUrl: u['foto_url']?.toString(),
+        token: u['token']?.toString(),
       );
       if (user.id <= 0) {
         return const Err(AppException('Respons login tidak valid.', code: 'INVALID_RESPONSE'));
       }
+      client.setAuthToken(user.token);
       await AuthSession.instance.save(user);
       return Ok(user);
     } on AppException catch (e) {
@@ -51,5 +53,8 @@ class AuthRepository {
     }
   }
 
-  Future<void> logout() => AuthSession.instance.clear();
+  Future<void> logout() async {
+    client.setAuthToken(null);
+    await AuthSession.instance.clear();
+  }
 }

@@ -2,6 +2,8 @@
 require_once __DIR__."/../config/cors.php";
 cors(["GET","POST","PUT","DELETE","OPTIONS"]);
 require_once __DIR__."/../config/db.php";
+require_once __DIR__."/../config/auth.php";
+require_auth($conn, $authUserId);
 $conn->set_charset("utf8mb4");
 
 function respond($ok,$msg,$data=null,$code=200,$errCode="REQUEST_FAILED"){http_response_code($code);$out=["success"=>$ok,"message"=>$msg,"data"=>$data];if(!$ok)$out["error"]=["code"=>$code===422?"VALIDATION_ERROR":($code===404?"NOT_FOUND":$errCode),"fields"=>new stdClass()];echo json_encode($out,JSON_UNESCAPED_UNICODE);exit;}
