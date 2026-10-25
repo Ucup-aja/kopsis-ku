@@ -37,7 +37,7 @@ class ApiClient {
   /// iOS emulator: http://10.0.3.2:8081/koperasi_siswa
   ///
   /// Build APK pakai --dart-define (bakar ke binary, jalan di device):
-  ///   flutter build apk --release --dart-define=BACKEND_URL=https://<host>/koperasi_siswa
+  ///   flutter build apk --release --dart-define=BACKEND_URL=https://`<host>`/koperasi_siswa
   static String _defaultBaseUrl() {
     const defined = String.fromEnvironment('BACKEND_URL');
     if (defined.isNotEmpty) return defined;
