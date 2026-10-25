@@ -11,7 +11,6 @@ import '../error/app_exception.dart';
 /// - timeout, network-error mapping to [AppException]
 /// - meaningful HTTP status mapping (API_CONTRACT.md §5)
 ///
-/// UI and repositories must use this, never `http` directly.
 /// Central HTTP client — the ONLY place that touches `package:http`.
 ///
 /// Responsibilities (ARCHITECTURE.md §4):
@@ -26,25 +25,10 @@ class ApiClient {
   final http.Client _http;
 
   ApiClient({
-    String? baseUrl,
+    required this.baseUrl,
     this.timeout = const Duration(seconds: 15),
     http.Client? httpClient,
-  })  : baseUrl = baseUrl ?? _defaultBaseUrl(),
-        _http = httpClient ?? http.Client();
-
-  /// URL default: port 8081 sesuai docker-compose.yml.
-  /// Android emulator: http://10.0.2.2:8081/koperasi_siswa
-  /// iOS emulator: http://10.0.3.2:8081/koperasi_siswa
-  ///
-  /// Build APK pakai --dart-define (bakar ke binary, jalan di device):
-  ///   flutter build apk --release --dart-define=BACKEND_URL=https://`<host>`/koperasi_siswa
-  static String _defaultBaseUrl() {
-    const defined = String.fromEnvironment('BACKEND_URL');
-    if (defined.isNotEmpty) return defined;
-    final env = Platform.environment['FLUTTER_BACKEND_URL'];
-    if (env != null && env.isNotEmpty) return env;
-    return 'http://10.0.2.2:8081/koperasi_siswa';
-  }
+  }) : _http = httpClient ?? http.Client();
 
   String? _token;
 
