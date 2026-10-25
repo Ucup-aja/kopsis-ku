@@ -31,7 +31,7 @@ services:
       # Foto produk/profil persisten antar restart.
       - uploads:/var/www/html/koperasi_siswa/backend/storage/uploads
     ports:
-      - "${BACKEND_PORT:-8080}:80"
+      - "${BACKEND_PORT:-8081}:80"
     depends_on:
       db:
         condition: service_healthy

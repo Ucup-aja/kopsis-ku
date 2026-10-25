@@ -12,16 +12,35 @@ import '../error/app_exception.dart';
 /// - meaningful HTTP status mapping (API_CONTRACT.md §5)
 ///
 /// UI and repositories must use this, never `http` directly.
+/// Central HTTP client — the ONLY place that touches `package:http`.
+///
+/// Responsibilities (ARCHITECTURE.md §4):
+/// - JSON encode/decode + consistent `{success,message,data,error}` parsing
+/// - timeout, network-error mapping to [AppException]
+/// - meaningful HTTP status mapping (API_CONTRACT.md §5)
+///
+/// UI and repositories must use this, never `http` directly.
 class ApiClient {
   final String baseUrl;
   final Duration timeout;
   final http.Client _http;
 
   ApiClient({
-    required this.baseUrl,
+    String? baseUrl,
     this.timeout = const Duration(seconds: 15),
     http.Client? httpClient,
-  }) : _http = httpClient ?? http.Client();
+  }) : baseUrl = baseUrl ??
+      // Default: pakai port 8081 sesuai docker-compose.yml
+      //untuk Android emulator gunakan http://10.0.2.2:8081/koperasi_siswa
+      //untuk iOS gunakan http://10.0.3.2:8081/koperasi_siswa
+      //untuk web/desktop bisa di-set via environment variable FLUTTER_BACKEND_URL
+      _getDefaultBaseUrl() {
+    final env = Platform.environment['FLUTTER_BACKEND_URL'];
+    if (env != null && env.isNotEmpty) return env;
+    // fallback ke IP emulator Android
+    return 'http://10.0.2.2:8081/koperasi_siswa';
+  },
+  ) : _http = httpClient ?? http.Client();
 
   Uri uri(String path, [Map<String, String>? query]) {
     final base = path.startsWith('http') ? path : '$baseUrl$path';
