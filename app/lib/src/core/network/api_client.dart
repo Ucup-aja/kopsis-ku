@@ -29,18 +29,22 @@ class ApiClient {
     String? baseUrl,
     this.timeout = const Duration(seconds: 15),
     http.Client? httpClient,
-  }) : baseUrl = baseUrl ??
-      // Default: pakai port 8081 sesuai docker-compose.yml
-      //untuk Android emulator gunakan http://10.0.2.2:8081/koperasi_siswa
-      //untuk iOS gunakan http://10.0.3.2:8081/koperasi_siswa
-      //untuk web/desktop bisa di-set via environment variable FLUTTER_BACKEND_URL
-      _getDefaultBaseUrl() {
+  })  : baseUrl = baseUrl ?? _defaultBaseUrl(),
+        _http = httpClient ?? http.Client();
+
+  /// URL default: port 8081 sesuai docker-compose.yml.
+  /// Android emulator: http://10.0.2.2:8081/koperasi_siswa
+  /// iOS emulator: http://10.0.3.2:8081/koperasi_siswa
+  ///
+  /// Build APK pakai --dart-define (bakar ke binary, jalan di device):
+  ///   flutter build apk --release --dart-define=BACKEND_URL=https://<host>/koperasi_siswa
+  static String _defaultBaseUrl() {
+    const defined = String.fromEnvironment('BACKEND_URL');
+    if (defined.isNotEmpty) return defined;
     final env = Platform.environment['FLUTTER_BACKEND_URL'];
     if (env != null && env.isNotEmpty) return env;
-    // fallback ke IP emulator Android
     return 'http://10.0.2.2:8081/koperasi_siswa';
-  },
-  ) : _http = httpClient ?? http.Client();
+  }
 
   Uri uri(String path, [Map<String, String>? query]) {
     final base = path.startsWith('http') ? path : '$baseUrl$path';
