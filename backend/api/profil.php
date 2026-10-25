@@ -57,7 +57,10 @@ if($method==='POST'){
   if($f['error']!==0) respond(false,"Upload error ".$f['error'],null,400);
   if($f['size']>5*1024*1024) respond(false,"Foto maksimal 5MB",null,400);
   $ext=strtolower(pathinfo($f['name'],PATHINFO_EXTENSION));
-  if(!in_array($ext,['jpg','jpeg','png','webp'])) $ext='jpg';
+  if(!in_array($ext,['jpg','jpeg','png','webp'])) respond(false,"Format foto harus jpg, png, atau webp",null,400);
+  $finfo=new finfo(FILEINFO_MIME_TYPE); $mime=$finfo->file($f['tmp_name']);
+  if(!in_array($mime,['image/jpeg','image/png','image/webp'])) respond(false,"File bukan gambar yang valid",null,400);
+  if($ext==='jpeg') $ext='jpg';
   $name="profil_".(int)$id."_".time()."_".bin2hex(random_bytes(3)).".$ext";
   $dest="$uploadDir/$name";
   if(!move_uploaded_file($f['tmp_name'],$dest)) respond(false,"Gagal simpan foto",null,500);

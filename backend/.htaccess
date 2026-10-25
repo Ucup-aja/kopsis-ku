@@ -1,4 +1,14 @@
 <FilesMatch "\.(sql|log|md|local\.php)$">
     Require all denied
 </FilesMatch>
+
+# Skrip CLI — jangan bisa diakses lewat HTTP (menulis data uji ke DB).
+<Files "check.php">
+    Require all denied
+</Files>
+
+# Folder upload boleh dibaca (untuk gambar), tapi PHP tidak boleh dieksekusi.
+RewriteEngine On
+RewriteRule ^storage/uploads/.*\.php$ - [F,L]
+
 Options -Indexes
