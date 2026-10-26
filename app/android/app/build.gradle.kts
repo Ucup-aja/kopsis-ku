@@ -25,11 +25,27 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // v1 (JAR) wajib ada: beberapa installer Android 10 menolak APK yang
+            // hanya bertanda tangan v2 → "App not installed".
+            enableV1Signing = true
+            enableV2Signing = true
+
+            // ponytail: pakai debug keystore agar build release langsung bisa di-install
+            // tanpa bikin key baru. Untuk distribusi serius, buat upload key sendiri
+            // (keytool -genkey) + file key.properties, lalu ganti di sini.
+            storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
