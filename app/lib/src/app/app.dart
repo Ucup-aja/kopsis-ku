@@ -47,7 +47,7 @@ class AppRouter {
       listenable: AuthSession.instance,
       builder: (_, __) {
         final u = AuthSession.instance.user;
-        if (u == null) return const LoginPage();
+        if (u == null || u.token == null) return const LoginPage();
         return MainShell(
           userId: u.id,
           name: u.name,

@@ -81,7 +81,7 @@ class AuthSession extends ChangeNotifier {
 
   Future<void> load() async {
     final p = await SharedPreferences.getInstance();
-    _user = AuthUser.fromPrefs({
+    final u = AuthUser.fromPrefs({
       'id': p.getString(_pId),
       'name': p.getString(_pName),
       'username': p.getString(_pUsername),
@@ -90,6 +90,9 @@ class AuthSession extends ChangeNotifier {
       'fotoUrl': p.getString(_pFotoUrl),
       'token': p.getString(_pToken),
     });
+    // Sesi dari versi lama (offline) tidak menyimpan token — anggap belum login
+    // agar pengguna login ulang dan mendapat token untuk API.
+    _user = (u != null && u.token != null) ? u : null;
     notifyListeners();
   }
 
